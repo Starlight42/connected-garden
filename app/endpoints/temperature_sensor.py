@@ -1,6 +1,8 @@
 from flask import request
 from flask_restful import Resource
 
+from app.models import Sensor, db
+
 
 class TemperatureSensor(Resource):
     """This endpoint allow to manage temperature sensors"""
@@ -36,8 +38,11 @@ class TemperatureSensor(Resource):
 
     def create_sensor(self, sensor_id, json_sensor_data):
         if sensor_id not in self.sensors.keys():
-            self.sensors[sensor_id] = json_sensor_data['sensor_value']
-            response = {sensor_id: self.sensors[sensor_id]}
+            prob = Sensor(sensor_id, json_sensor_data['sensor_value'])
+            db.session.add(prob)
+            db.session.commit()
+
+            response = {sensor_id: str(Sensor.query.all())}
         else:
             response = {sensor_id: """A temperature sensor with the same ID exists in DB.
             Please use PUT to update it or change the sensor name"""}
