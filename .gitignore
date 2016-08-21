@@ -1,3 +1,4 @@
 .idea/
-endpoints/__pycache__/
+app/endpoints/__pycache__/
+app/__pycache__/
 .conGarden/
