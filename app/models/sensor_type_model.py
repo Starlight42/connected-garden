@@ -4,14 +4,14 @@ from app import db, config
 class SensorTypeModel(db.Model):
     __tablename__ = 'sensor_type'
     id = db.Column(db.Integer, primary_key=True)
-    sensor_type_name = db.Column(db.String(42), unique=True)
+    type_name = db.Column(db.String(42), unique=True)
     sensors = db.relationship('SensorModel', backref=__tablename__, lazy='dynamic')
 
     def __init__(self, sensor_type_name):
-        self.sensor_type_name = sensor_type_name
+        self.type_name = sensor_type_name
 
     def to_json(self):
-        return dict(type_id=self.id, type_name=self.sensor_type_name)
+        return dict(type_id=self.id, type_name=self.type_name)
 
 
 """
