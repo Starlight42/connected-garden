@@ -13,8 +13,17 @@ class Sensor(Resource):
         self.sensor_type = app.resources.SensorType()
 
     """ Get a sensor value"""
-    def get(self):
-        sensor_type_id = self.get_sensor_type()
+    def get(self, sensor_type_id=None, sensor_id=None):
+        # if sensor_type_id:
+        # We fetch and return all sensors of type sensor_type_id
+        # get_sensors_of type(sensor_type_id)
+        # elif sensor_id:
+        # We fetch and return sensor with id sensor_id
+        # get_sensor(sensor_id)
+        # else:
+        # We fetch and return all sensors
+        # get_sensors()
+
         json_data = request.get_json()
         sensor = SensorModel.query.filter_by(name=json_data['sensor_name'],
                                              sensor_type_id=sensor_type_id).first()
@@ -30,12 +39,20 @@ class Sensor(Resource):
     def post(self):
         return self.create_or_update_sensor(request.get_json(silent=True))
 
-    """Update a temperature sensor ID and/or value"""
-    def put(self):
+    """Bulk update a temperature sensor ID and/or value"""
+    def put(self, sensor_id):
         return self.create_or_update_sensor(request.get_json(silent=True))
 
+    """Update a sensor Value"""
+    def patch(self, sensor_id):
+        pass
+
+    """Delete a sensor given is sensor_id"""
+    def delete(self, sensor_id):
+        pass
+
     def create_or_update_sensor(self, json_data):
-        sensor_type_id = self.get_sensor_type()
+        sensor_type_id = self.get_sensor_type_id()
 
         if json_data is None:
             response = {'error': 'Data not JSON or header Content-Type not set to application/json'}
@@ -80,12 +97,5 @@ class Sensor(Resource):
 
         return response
 
-    def get_sensor_type(self):
-        sensor_id = None
-
-        if 'humi' in request.path:
-            sensor_id = self.sensor_type.get_sensor_type_id('humi')
-        elif 'temp' in request.path:
-            sensor_id = self.sensor_type.get_sensor_type_id('temp')
-
-        return sensor_id
+    def get_sensor_type_id(self, sensor_type_name):
+        return self.sensor_type.get_sensor_type_id(sensor_type_name)
