@@ -1,5 +1,5 @@
 .idea/
 app/__pycache__/
-app/endpoints/__pycache__/
+app/resources/__pycache__/
 app/models/__pycache__/
 .conGarden/

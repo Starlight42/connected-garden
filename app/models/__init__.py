@@ -1,1 +1,2 @@
-from .sensor_model import Sensor, db
+from .sensor_model import db, SensorModel
+from .sensor_type_model import SensorTypeModel
