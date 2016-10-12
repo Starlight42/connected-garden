@@ -15,4 +15,5 @@ class SensorModel(db.Model):
         self.value = sensor_value
 
     def to_json(self):
-        return dict(sensor_id=self.id, sensor_name=self.name, sensor_value=self.value)
+        return dict(sensor_id=self.id, sensor_type_id=self.sensor_type_id, sensor_type_name="",
+                    sensor_name=self.name, sensor_value=self.value)
