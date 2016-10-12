@@ -10,7 +10,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config.DB_PATH
 db = SQLAlchemy(app)
 from app.resources import (Sensor, SensorType)
 
-api.add_resource(Sensor, '/api/sensors/<int:sensor_id>/', '/api/sensors/<int:sensor_type_id>/', '/api/sensors/')
+api.add_resource(Sensor, '/api/sensors/<int:sensor_id>/', '/api/sensors/')
 api.add_resource(SensorType, '/api/sensortypes/<int:type_id>', '/api/sensortypes/')
 
 """
