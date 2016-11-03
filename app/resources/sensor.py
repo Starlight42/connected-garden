@@ -27,16 +27,53 @@ class Sensor(Resource):
 
     """ Add a temperature sensor given is sensor_id"""
     def post(self):
-        return self.create_or_update_sensor(request.get_json(silent=True))
+        """Create sensor in DB :
+            First we create an object model describing our db entry,
+            then we add it to the db and commit to validate the action.
+            After that we are getting the last inserted id and return the
+            result as a confirmation.
+        """
+        json_data = request.get_json(silent=True)
 
-    """ Bulk update a temperature sensor ID and/or value.
+        if json_data is None:
+            response = {'error': 'Data not JSON or header Content-Type not set to application/json'}
+        else:
+            prob = SensorModel(json_data['sensor_name'], json_data['sensor_type_id'],
+                               json_data['sensor_value'])
+
+            self.commit_db_changes(prob)
+            prob_list = SensorModel.query.filter_by(id=prob.id).first()
+            response = self.add_sensor_type_name(prob_list.to_json())
+
+        return response
+
+    """ Bulk update a sensor.
         PUT is essentialy a DELETE followed by a POST """
     def put(self, sensor_id):
-        return self.create_or_update_sensor(request.get_json(silent=True), sensor_id)
-
-    """ Update a sensor Value """
-    def patch(self, sensor_id):
+        # Not usefull for now
         pass
+
+    """ Update a sensor Value or sensor type or both"""
+    def patch(self, sensor_id):
+        json_data = request.get_json(silent=True)
+
+        if json_data is None:
+            response = {'error': 'Data not JSON or header Content-Type not set to application/json'}
+        else:
+            prob = SensorModel.query.filter_by(id=sensor_id).first()
+            if prob:
+                prob.name = json_data['sensor_name'] if \
+                    'sensor_name' in json_data else prob.name
+                prob.value = json_data['sensor_value'] if \
+                    'sensor_value' in json_data else prob.value
+                prob.sensor_type_id = json_data['sensor_type_id'] if \
+                    'sensor_type_id' in json_data else prob.sensor_type_id
+
+                response = self.commit_db_changes(prob)
+            else:
+                response = {'error': 'No sensor found with this ID'}
+
+        return response
 
     """ Delete a sensor given is sensor_id """
     def delete(self, sensor_id):
@@ -52,6 +89,12 @@ class Sensor(Resource):
         return response
 
     """Usefull tools functions for sensor"""
+
+    def commit_db_changes(self, db_obj):
+        db.session.add(db_obj)
+        db.session.commit()
+
+        return db_obj.to_json()
 
     """ Return the sensor with id sensor_id """
     def get_sensor(self, sensor_id):
@@ -75,51 +118,6 @@ class Sensor(Resource):
             response = {"sensors": sensor_list}
         else:
             response = {"errorMsg": """There is no sensor in the DB"""}
-
-        return response
-
-    def create_or_update_sensor(self, json_data, sensor_id=None):
-        if json_data is None:
-            response = {'error': 'Data not JSON or header Content-Type not set to application/json'}
-        else:
-            response = ''
-            if request.method == 'POST':
-                response = self.create_sensor(json_data)
-            elif request.method == 'PUT':
-                response = self.update_sensor(json_data, sensor_id)
-        return response
-
-    def create_sensor(self, json_sensor_data):
-        """Create sensor in DB :
-            First we create an object model describing our db entry,
-            then we add it to the db and commit to validate the action.
-            After that we are getting the last inserted id and return the
-            result as a confirmation.
-        """
-        prob = SensorModel(json_sensor_data['sensor_name'], json_sensor_data['sensor_type_id'],
-                           json_sensor_data['sensor_value'])
-        db.session.add(prob)
-        db.session.commit()
-
-        prob_list = SensorModel.query.filter_by(id=prob.id).first()
-        return self.add_sensor_type_name(prob_list.to_json())
-
-    def update_sensor(self, json_sensor_data, sensor_type_id):
-        prob = SensorModel.query.filter_by(name=json_sensor_data['sensor_name'],
-                                           sensor_type_id=sensor_type_id).first()
-        if prob:
-            # TODO : check if json_data['sensor_type_id] exists. If yes we need to update type_id too
-            prob.sensor_type_id = sensor_type_id
-            prob.name = json_sensor_data['sensor_name']
-            prob.value = json_sensor_data['sensor_value']
-            db.session.add(prob)
-            db.session.commit()
-            response = prob.to_json()
-        else:
-            response = {json_sensor_data['sensor_name']:
-                        """No sensor with name : {0} of type : {1} in DB."""
-                        .format(json_sensor_data['sensor_name'],
-                                self.sensor_type.get_sensor_type_name(sensor_type_id))}
 
         return response
 
