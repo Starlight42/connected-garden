@@ -1,5 +1,6 @@
 from flask import request
 from flask_restful import Resource
+from sqlalchemy import exc
 
 from app.models import db, SensorModel
 import app.resources
@@ -42,6 +43,7 @@ class Sensor(Resource):
                                json_data['sensor_value'])
 
             self.commit_db_changes(prob)
+            # Check commit_db_change return if failed (IntegrityError) set response from return status
             prob_list = SensorModel.query.filter_by(id=prob.id).first()
             response = self.add_sensor_type_name(prob_list.to_json())
 
@@ -92,9 +94,17 @@ class Sensor(Resource):
 
     def commit_db_changes(self, db_obj):
         db.session.add(db_obj)
-        db.session.commit()
 
-        return db_obj.to_json()
+        try:
+            db.session.commit()
+        except exc.IntegrityError as e:
+            db.session.rollback()
+            db.session.flush()
+            response = {"Error": e.args}
+        else:
+            response = db_obj.to_json()
+
+        return response
 
     """ Return the sensor with id sensor_id """
     def get_sensor(self, sensor_id):
